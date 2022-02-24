@@ -22,9 +22,12 @@ command_line = input('>> ').strip()
 while command_line.upper() != '.EXIT':
     # ignore comments
     if command_line.startswith('--'):
-        print('comment')
+        pass
+    # ignore whitespace only
+    elif command_line.strip() == '':
+        pass
     # invalid command if no terminating semicolon
-    if not command_line.endswith(';'):
+    elif not command_line.endswith(';'):
         print('!Missing terminating semicolon \';\'.')
     
     else:
