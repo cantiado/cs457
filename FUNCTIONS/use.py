@@ -7,9 +7,21 @@
 
 import os
 
-def use(db_name: str) -> str:
+def use(tokens: list[str]) -> str:
+    # fail if not exactly 1 token
+    if len(tokens) == 0:
+        print(f'!Failed to select database because of missing arguments.')
+        return
+    if len(tokens) > 1:
+        print(f'!Failed to select database because of too many arguments.')
+        return
+
+    # only token is database name
+    db_name = tokens.pop()
     cwd = os.getcwd()
     db_path = os.path.join(cwd,db_name)
+    # fail and return NULL if database does not exist
+    # otherwise select database and return selection
     if os.path.isdir(db_path):
         print(f'Using database {db_name}.')
         return db_name

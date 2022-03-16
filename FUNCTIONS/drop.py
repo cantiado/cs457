@@ -9,13 +9,22 @@
 import os
 import errno
 
-def drop(args: str, db = 'NULL'):
-    try:
-        object_type, object_name = args.split(' ', 1)
-    except ValueError as error:
-        print('!Failed to perform command because it is missing arguments.')
+def drop(tokens: list[str], db = 'NULL') -> None:
+    # fail if not exactly 2 tokens
+    if len(tokens) < 2:
+        print('!Failed to perform command because of missing arguments.')
         return
+    if len(tokens) > 2:
+        print('!Failed to perform command because of too many arguments.')
+        return
+    
+    # determine object_type from first token,
+    # object_name from last token
+    object_type = tokens.pop(0)
+    object_name = tokens.pop()
     if object_type.upper() == 'DATABASE':
+        # fail if database does not exist or is not empty
+        # otherwise delete database
         cwd = os.getcwd()
         db_path = os.path.join(cwd,object_name)
         try:
@@ -28,29 +37,31 @@ def drop(args: str, db = 'NULL'):
                 print(f'!Failed to delete database {object_name} because it is not empty.')
             else:
                 print(error.errno, error)
-    if object_type.upper() == 'TABLE':
+
+    elif object_type.upper() == 'TABLE':
+        # fail if no database selected or if table does not exist
+        # otherwise delete table
         if db == 'NULL':
             print(f'!Failed to delete table {object_name} because a database was not selected.')
             return
-        else:
-            cwd = os.getcwd()
-            db_path = os.path.join(cwd,db)
-            tb_path = os.path.join(db_path,object_name)
-            try:
-                os.remove(tb_path)
-                print(f'Table {object_name} deleted.')
-            except OSError as error:
-                if error.errno == errno.ENOENT:
-                    print(f'!Failed to delete table {object_name} because it does not exist.')
-                else:
-                    print(error.errno, error)
+        cwd = os.getcwd()
+        tb_path = os.path.join(cwd,db,object_name)
+        try:
+            os.remove(tb_path)
+            print(f'Table {object_name} deleted.')
+        except OSError as error:
+            if error.errno == errno.ENOENT:
+                print(f'!Failed to delete table {object_name} because it does not exist.')
+            else:
+                print(error.errno, error)
 
+# test script
 
 def main():
     tb = 'table tb1'
-    drop(tb, 'db1')
+    drop(tb.split(), 'db1')
     db = 'database db1'
-    drop(db)
+    drop(db.split())
 
 if __name__ == '__main__':
     main()

@@ -1,0 +1,1 @@
+test varchar(2) | another int

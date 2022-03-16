@@ -3,88 +3,87 @@
 # Created 2/12/2022
 
 # SELECT <col_list> FROM <tb_name>
-# col_list: <column> <datatype> | <column> <datatype> <col_list>
-# column: <string>
-# datatype: int | float | char(<int>) | varchar(<int>)
+# col_list: <string> | <string> , <col_list>
 # tb_name: <string>
 
-from hashlib import new
 import os
 import errno
+from constants import DATATYPES
 
-def select(args: str, db = 'NULL'):
-    if 'FROM' not in args.upper():
-        print('!Failed to perform command because it is missing keyword FROM.')
-        return
-    col_list = args[:args.upper().index('FROM')]
-    tb_name = args[args.upper().index('FROM') + 4:]
-    #col_list, tb_name = args.split('FROM',1)
-    col_list = col_list.strip()
-    tb_name = tb_name.strip()
-    if col_list == '' or tb_name == '':
-        print('!Failed to perform command because it is missing arguments.')
+def select(tokens: list[str], db = 'NULL') -> None:
+    # fail if too few tokens, no database selected, or database does not exist
+    if len(tokens) < 3:
+        print('!Failed to query table because of missing arguments.')
         return
     if db == 'NULL':
-        print(f'!Failed to query table {tb_name} because a database was not selected.')
+        print('!Failed to query table because a database was not selected.')
         return
     cwd = os.getcwd()
     db_path = os.path.join(cwd,db)
     if not os.path.isdir(db_path):
-        print(f'!Failed to query table {tb_name} because database {db} does not exist.')
+        print(f'!Failed to query table because database {db} does not exist.')
         return
-    
+    # extract all column names until FROM
+    col_list = [tokens.pop(0)]
+    delim = tokens.pop(0)
+    while delim == ',' and len(tokens) > 1:
+        col_list.append(tokens.pop(0))
+        delim = tokens.pop(0)
+    # fail if delim is not keyword FROM, incorrect number of arguments, or table does not exist
+    if delim.upper() != 'FROM':
+        print('!Failed to query table because of expected keyword FROM after columns.')
+        return
+    if len(tokens) < 1:
+        print('!Failed to query table because of missing table name.')
+        return
+    if len(tokens) > 1:
+        print('!Failed to query table because of too many arguemnts.')
+        return
+    tb_name = tokens.pop()
     tb_path = os.path.join(db_path,tb_name)
-    if col_list == '*':
-        try:
-            with open(tb_path, 'r', newline='') as table:
-                for row in table:
-                    print(row.replace(',', ' | '))
-        except OSError as error:
-            if error.errno == errno.ENOENT:
-                print(f'!Failed to query table {tb_name} because it does not exist.')
-            else:
-                print(error.errno, error)
-            return
-    else:
-        col_list = col_list.split(',')
-        for entry in col_list:
-            column, datatype = entry.strip().split(maxsplit=1)
-            x = column + ' ' + datatype.replace(' ','')
-            col_list[col_list.index(entry)] = x
-        #print(col_list)
-        tb_matrix = list()
-        try:
-            with open(tb_path, 'r', newline='') as table:
-                for row in table:
-                    tb_matrix.append(row.split(','))
-        except OSError as error:
-            if error.errno == errno.ENOENT:
-                print(f'!Failed to query table {tb_name} because it does not exist.')
-            else:
-                print(error.errno, error)
-            return
-        #print(tb_matrix)
-        col_index = list()
-        for col in col_list:
-            if col in tb_matrix[0]:
-                col_index.append(tb_matrix[0].index(col))
-        if len(col_index) == 0:
-            print(f'!Failed to query table {tb_name} because no valid columns were given.')
-            return
-        if len(col_index) == 1:
-            for row in tb_matrix:
-                print(row[col_index[0]])
+    if not os.path.isfile(tb_path):
+        print(f'!Failed to query table {tb_name} because it does not exist.')
+        return
+    # select columns from table
+    # check if column is in table, fail otherwise
+    # if wildcard is in column list, select all columns
+    with open(tb_path,'r') as tb_file:
+        table = tb_file.readlines()
+    # header example: ['a1','int','|','a2','char(2)','|','a3','float']
+    #   column name is every third element, i.e., i=0,3,6,...
+    header = table[0].split()[0::3]
+    index = []
+    for col in col_list:
+        if col in header:
+            # record index of desired column in table if not already recorded
+            if header.index(col) not in index:
+                index.append(header.index(col))
+        elif col == '*':
+            # final check for wildcards at end
+            pass
         else:
-            for row in tb_matrix:
-                s = ''
-                for i in col_index:
-                    s += row[i] + ' | '
-                print(s.removesuffix(' | '))
-
+            print(f'!Failed to query table {tb_name} because column {col} is not in table.')
+            return
+    # pif wildcard in column list, print entire table
+    # otherwise print desired columns
+    if '*' in col_list:
+        for row in table:
+            print(row)
+    else:
+        for row in table:
+            row = row.split(' | ')
+            row_str = ''
+            for i in index:
+                row_str += f'{row[i]} | '
+            print(row_str.removesuffix(' | '))
 
 def main():
-    select('* from tb1', 'db1')
-    select('   test    varchar  (  2  )   ,   another    int    FROM   tb1', 'db1')
+    tokens = '* from tb1'.split()
+    select(tokens, 'db1')
+    tokens = 'wrong from tb1'.split()
+    select(tokens, 'db1')
+    tokens = 'another , test from tb1'.split()
+    select(tokens, 'db1')
 
 if __name__ == '__main__':
     main()
