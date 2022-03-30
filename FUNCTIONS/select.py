@@ -1,14 +1,17 @@
 # Author: Carl Antiado
-# Last Updated: 2/12/2022
+# Last Updated: 3/28/2022
 # Created 2/12/2022
 
-# SELECT <col_list> FROM <tb_name>
+# SELECT <col_list> FROM <tb_name> [WHERE <col_name> != <value>]
 # col_list: <string> | <string> , <col_list>
 # tb_name: <string>
+# col_name: <string>
+# value: <int> | <float> | '<string>'
 
 import os
 import errno
-from constants import DATATYPES
+
+DATATYPES = {'int','float','char','varchar'}
 
 def select(tokens: list[str], db = 'NULL') -> None:
     # fail if too few tokens, no database selected, or database does not exist
@@ -36,15 +39,26 @@ def select(tokens: list[str], db = 'NULL') -> None:
     if len(tokens) < 1:
         print('!Failed to query table because of missing table name.')
         return
-    if len(tokens) > 1:
-        print('!Failed to query table because of too many arguemnts.')
-        return
-    tb_name = tokens.pop()
+    # No longer true; need to fix
+    #if len(tokens) > 1:
+    #    print('!Failed to query table because of too many arguemnts.')
+    #    return
+    tb_name = tokens.pop(0)
     tb_path = os.path.join(db_path,tb_name)
     if not os.path.isfile(tb_path):
         print(f'!Failed to query table {tb_name} because it does not exist.')
         return
-    # select columns from table
+    # if optional WHERE condition, must remember to only print true condition
+    is_where = False
+    col_name = ''
+    value = ''
+    if len(tokens) == 4:
+        tokens.pop(0)
+        is_where = True
+        col_name = tokens.pop(0)
+        tokens.pop(0)
+        value = tokens.pop()
+    # select rows from table
     # check if column is in table, fail otherwise
     # if wildcard is in column list, select all columns
     with open(tb_path,'r') as tb_file:
@@ -52,6 +66,8 @@ def select(tokens: list[str], db = 'NULL') -> None:
     # header example: ['a1','int','|','a2','char(2)','|','a3','float']
     #   column name is every third element, i.e., i=0,3,6,...
     header = table[0].split()[0::3]
+    if is_where:
+        search_index = header.index(col_name)
     index = []
     for col in col_list:
         if col in header:
@@ -67,15 +83,26 @@ def select(tokens: list[str], db = 'NULL') -> None:
     # pif wildcard in column list, print entire table
     # otherwise print desired columns
     if '*' in col_list:
-        for row in table:
-            print(row)
+        for i in range(len(table)):
+            if i == 0:
+                print(table[i],end='')
+            else:
+                if is_where:
+                    cols = table[i].split(' | ')
+                    if cols[search_index] != value:
+                        print(table[i],end='')
+                else:
+                    print(table[i],end='')
     else:
         for row in table:
             row = row.split(' | ')
             row_str = ''
-            for i in index:
-                row_str += f'{row[i]} | '
-            print(row_str.removesuffix(' | '))
+            if row[search_index] != value:
+                for i in index:
+                    row_str += f'{row[i]} | '
+                row_str = row_str.removesuffix(' | ')
+                row_str = row_str.removesuffix('\n') + '\n'
+                print(row_str, end='')
 
 def main():
     tokens = '* from tb1'.split()

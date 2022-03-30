@@ -22,16 +22,16 @@ where name = 'Gizmo';
 
 select * from Product;
 
-delete from product 
+delete from Product 
 where name = 'Gizmo';
 
-delete from product 
+delete from Product 
 where price > 150;
 
 select * from Product;
 
 select name, price 
-from product 
+from Product 
 where pid != 2;
 
 .exit

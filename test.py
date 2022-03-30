@@ -1,12 +1,32 @@
-t = 'a1 int | a2 char(2) | a3 float'
-s = '123 | XX | 3.14'
-table = [t,s]
-print(table)
-index = [0,2]
-for row in table:
-    row = row.split(' | ')
-    row_str = ''
-    for i in index:
-        row_str += f'{row[i]} | '
-    row_str = row_str.removesuffix(' | ')
-    print(row_str)
+def parse(cmd_line: str) -> list[str]:
+    tokens = []
+    next_token = ''
+    IGNORE = {' ','\t','\n','\r'}
+    SPECIAL = {'(',')',',',';'}
+    # parse command line by character
+    for ch in cmd_line:
+        if ch in IGNORE:
+            if next_token != '':
+                tokens.append(next_token)
+                next_token = ''
+        elif ch in SPECIAL:
+            if next_token != '':
+                tokens.append(next_token)
+                next_token = ''
+            tokens.append(ch)
+            # stop parsing if encounter terminating semicolon
+            if ch == ';':
+                break
+        else:
+            next_token += ch
+    if next_token != '': tokens.append(next_token)
+    return tokens
+
+def __isfloat(num: str) -> bool:
+    try:
+        float(num)
+        return True
+    except ValueError:
+        return False
+    
+print(__isfloat('14.99'))

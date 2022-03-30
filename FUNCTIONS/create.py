@@ -1,5 +1,5 @@
 # Author: Carl Antiado
-# Last Updated: 3/11/2022
+# Last Updated: 3/27/2022
 # Created 2/10/2022
 
 # CREATE <object_type> <object_name> (<col_list>)
@@ -13,7 +13,8 @@
 
 import os
 import errno
-from constants import DATATYPES
+
+DATATYPES = {'int','float','char','varchar'}
 
 def create(tokens: list[str], db = 'NULL') -> None:
     # fail if no tokens
@@ -48,6 +49,7 @@ def create(tokens: list[str], db = 'NULL') -> None:
                     print(f'!Failed to create database {object_name} because it already exits.')
                 else:
                     print(error.errno, error)
+                return
             print(f'Database {object_name} created.')
             
     elif object_type.upper() == 'TABLE':
@@ -117,7 +119,7 @@ def create(tokens: list[str], db = 'NULL') -> None:
                 print(f'!Failed to create table {object_name} because missing arguments in columns.')
                 return
         # remove extra separator
-        col_list = col_list.removesuffix(' | ')
+        col_list = col_list.removesuffix(' | ') + '\n'
         # create table
         with open(tb_path,'w') as tb:
             tb.write(col_list)

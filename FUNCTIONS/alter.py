@@ -1,5 +1,5 @@
 # Author: Carl Antiado
-# Last Updated: 3/16/2022
+# Last Updated: 3/27/2022
 # Created 2/22/2022
 
 # ALTER TABLE <tb_name> ADD <column> <datatype>
@@ -9,7 +9,8 @@
 
 import os
 import errno
-from constants import DATATYPES
+
+DATATYPES = {'int','float','char','varchar'}
 
 def alter(tokens: list[str], db = 'NULL') -> None:
     # fail if missing arguments, no database selected, database does not exist,
@@ -75,9 +76,9 @@ def alter(tokens: list[str], db = 'NULL') -> None:
     # append new column
     for i in range(len(table)):
         if i == 0:
-            table[i] += col_str
+            table[i] += col_str + '\n'
         else:
-            table[i] += ' | '
+            table[i] += ' | \n'
     # write table to file
     with open(tb_path,'w') as tb_file:
         tb_file.writelines(table)
