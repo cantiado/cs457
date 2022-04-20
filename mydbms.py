@@ -45,8 +45,11 @@ while True:
     else:
         # removes terminating semicolon
         tokens.pop()
+        # double check that it isn't a comment
+        if tokens[0].startswith('--'):
+            pass
         # if tokens is now empty, invalid command
-        if len(tokens) == 0:
+        elif len(tokens) == 0:
             print('!Invalid command.')
         else:
             # first token determines the command,

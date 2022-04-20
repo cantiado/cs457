@@ -1,10 +1,12 @@
 # Author: Carl Antiado
-# Last Updated: 2/10/2022
+# Last Updated: 4/16/2022
 # Created 2/10/2022
 
-# DROP <object_type> <object_name>
-# object_type: DATABASE | TABLE
-# object_name: <string>
+'''
+DROP: <object_type> <object_name>
+object_type: DATABASE | TABLE
+object_name: <string>
+'''
 
 import os
 import errno
@@ -58,9 +60,9 @@ def drop(tokens: list[str], db = 'NULL') -> None:
 # test script
 
 def main():
-    tb = 'table tb1'
-    drop(tb.split(), 'db1')
-    db = 'database db1'
+    tb = 'table test'
+    drop(tb.split(), 'Test')
+    db = 'database Test'
     drop(db.split())
 
 if __name__ == '__main__':
