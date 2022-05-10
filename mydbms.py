@@ -11,6 +11,7 @@ from FUNCTIONS.alter import alter
 from FUNCTIONS.insert import insert
 from FUNCTIONS.update import update
 from FUNCTIONS.delete import delete
+from FUNCTIONS.transaction import transaction
 '''
 --- Grammar ---
 command_line := <command> <args> ; | .EXIT
@@ -71,6 +72,8 @@ while True:
                 update(tokens, selected_db)
             elif command.upper() == 'DELETE':
                 delete(tokens, selected_db)
+            elif command.upper() == 'BEGIN':
+                transaction(selected_db)
             else:
                 print('!Invalid command.')
     # command was attempted
